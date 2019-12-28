@@ -300,6 +300,15 @@ func (d *dualRootfsDeviceImpl) getInactivePartition() (string, string, error) {
 	partitionNumberDecStr := inactivePartition[len(strings.TrimRight(inactivePartition, "0123456789")):]
 	partitionNumberDec, err := strconv.Atoi(partitionNumberDecStr)
 	if err != nil {
+		// XXX
+		// Using fake partition numbers 0 and 1 for handling
+		// dm-crypt rootfs partitions
+		// XXX
+		if inactivePartition == d.rootfsPartA {
+			return "0", "0", nil
+		} else if inactivePartition == d.rootfsPartB {
+			return "1", "1", nil
+		}
 		return "", "", errors.New("Invalid inactive partition: " + inactivePartition)
 	}
 
