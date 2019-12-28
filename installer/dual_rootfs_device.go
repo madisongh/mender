@@ -236,7 +236,16 @@ func (d *dualRootfsDeviceImpl) getPartitionImpl(partition string) (string, strin
 	partitionNumberDecStr := partition[len(strings.TrimRight(partition, "0123456789")):]
 	partitionNumberDec, err := strconv.Atoi(partitionNumberDecStr)
 	if err != nil {
-		return "", "", errors.New("Invalid partition: " + partition)
+		// XXX
+		// Using fake partition numbers 0 and 1 for handling
+		// dm-crypt rootfs partitions
+		// XXX
+		if partition == d.rootfsPartA {
+			return "0", "0", nil
+		} else if partition == d.rootfsPartB {
+			return "1", "1", nil
+		}
+		return "", "", errors.New("Invalid inactive partition: " + partition)
 	}
 
 	partitionNumberHexStr := fmt.Sprintf("%X", partitionNumberDec)
