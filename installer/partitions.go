@@ -151,6 +151,24 @@ func getRootFromMountedDevices(sc system.StatCommander,
 
 func (p *partitions) getAndCacheActivePartition(rootChecker func(system.StatCommander, string, *syscall.Stat_t) bool,
 	getMountedDevices func(string) ([]string, error)) (string, error) {
+
+	// Fetch active partition from ENV
+	bootEnvBootPart, err := getBootEnvActivePartition(p.BootEnvReadWriter)
+	if err != nil {
+		return "", err
+	}
+
+	candidatePartition, err := filepath.EvalSymlinks("/run/systemd/volatile-root")
+	if err == nil {
+		if (candidatePartition == p.rootfsPartA && bootEnvBootPart == "0") ||
+			(candidatePartition == p.rootfsPartA && bootEnvBootPart == "1") ||
+			checkBootEnvAndRootPartitionMatch(bootEnvBootPart, candidatePartition) {
+			p.active = candidatePartition
+			log.Debug("Setting active partition: ", candidatePartition)
+			return p.active, nil
+		}
+	}
+
 	mountData, err := p.Command("mount").Output()
 	if err != nil {
 		return "", err
@@ -160,12 +178,6 @@ func (p *partitions) getAndCacheActivePartition(rootChecker func(system.StatComm
 	rootDevice := getRootDevice(p)
 	if rootDevice == nil {
 		return "", errors.New("Can not find root device")
-	}
-
-	// Fetch active partition from ENV
-	bootEnvBootPart, err := getBootEnvActivePartition(p.BootEnvReadWriter)
-	if err != nil {
-		return "", err
 	}
 
 	// First check if mountCandidate matches rootDevice
