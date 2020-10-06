@@ -161,7 +161,7 @@ func (p *partitions) getAndCacheActivePartition(rootChecker func(system.StatComm
 	candidatePartition, err := filepath.EvalSymlinks("/run/systemd/volatile-root")
 	if err == nil {
 		if (candidatePartition == p.rootfsPartA && bootEnvBootPart == "0") ||
-			(candidatePartition == p.rootfsPartA && bootEnvBootPart == "1") ||
+			(candidatePartition == p.rootfsPartB && bootEnvBootPart == "1") ||
 			checkBootEnvAndRootPartitionMatch(bootEnvBootPart, candidatePartition) {
 			p.active = candidatePartition
 			log.Debug("Setting active partition: ", candidatePartition)
