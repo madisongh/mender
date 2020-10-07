@@ -158,7 +158,12 @@ func (p *partitions) getAndCacheActivePartition(rootChecker func(system.StatComm
 		return "", err
 	}
 
-	candidatePartition, err := filepath.EvalSymlinks("/run/systemd/volatile-root")
+	// bootdev generator for systemd creates this symlink to point to
+	// the /dev/mapper/<partition> device - do not want to resolve that symlink further
+	candidatePartition, err := os.Readlink("/run/bootdev/rootfs-device")
+	if err != nil {
+		candidatePartition, err = filepath.EvalSymlinks("/run/systemd/volatile-root")
+	}
 	if err == nil {
 		if (candidatePartition == p.rootfsPartA && bootEnvBootPart == "0") ||
 			(candidatePartition == p.rootfsPartB && bootEnvBootPart == "1") ||
